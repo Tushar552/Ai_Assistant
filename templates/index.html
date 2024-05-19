@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Ai Assistant</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="static/images/gpt.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/highlight.js@10.7.2/lib/languages/python.min.js"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/a11y-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7304214060233015"
+     crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <div class="container mt-5"><center>
+    <h1 style="color:rgb(238, 236, 236)">AI Assistant</h1></center>
+    <div class="chat-box mt-3">
+      <!-- Chat messages will be added here dynamically -->
+    </div>
+
+    <style>
+      .custom-btn {
+        margin: 10px;
+        border-radius: 15px;
+      }
+      .form-group {
+        background-color: rgb(255, 255, 255);
+    border-radius: 10px;
+      }
+      .form-control {
+    height: 20px;
+    background-color: rgb(255, 255, 255);
+    color: black;
+    }
+    .heig {
+      height: 50px;
+    }
+    </style>
+
+    <div class="heig"></div>
+    <div class="form-group mt-3">
+      <div class="input-group">
+        <textarea class="form-control" rows="3" placeholder="Type your message here" id="message-input"></textarea>
+        <div class="input-group-append">
+          <button type="button" class="btn btn-sm btn-success custom-btn" id="send-btn">
+            <i class="fas fa-paper-plane"></i> Send
+          </button>
+          <button type="button" class="btn btn-sm btn-info custom-btn" id="voice-input-btn">
+            <i class="fas fa-microphone"></i> Voice
+          </button>
+        </div>
+      </div>
+    </div>
+     <center><a href="https://www.linkedin.com/in/tushar-raha-ab5a921b0" >Connect With Tushar Raha On Linkedin</a></center>
+
+  <script>
+    setInterval(highlightAll, 1000);
+    // Function to highlight code using highlight.js library
+    function highlightAll() {
+      document.querySelectorAll("pre code").forEach(block => {
+        hljs.highlightBlock(block);
+      });
+    }
+
+    const chatBox = document.querySelector(".chat-box");
+    const messageInput = document.querySelector("#message-input");
+    const sendBtn = document.querySelector("#send-btn");
+    const voiceInputBtn = document.querySelector("#voice-input-btn");
+
+
+    // Create the SpeechSynthesisUtterance object and variables outside the speak function
+    const utterance = new SpeechSynthesisUtterance();
+    let isSpeaking = false;
+
+    // Text-to-speech function
+    function speak(text) {
+      if (isSpeaking) {
+        speechSynthesis.cancel();
+        isSpeaking = false;
+      }
+
+      utterance.text = text;
+      speechSynthesis.speak(utterance);
+      isSpeaking = true;
+    }
+
+    // Function to pause speech synthesis
+    function pauseSpeech() {
+      if (isSpeaking) {
+        speechSynthesis.pause();
+        isSpeaking = false;
+      }
+    }
+
+    // Function to resume speech synthesis
+    function resumeSpeech() {
+      if (!isSpeaking) {
+        speechSynthesis.resume();
+        isSpeaking = true;
+      }
+    }
+
+
+
+
+    // Speech-to-text function
+    function listen() {
+      const recognition = new (webkitSpeechRecognition || SpeechRecognition)();
+      recognition.lang = 'en-US';
+      recognition.start();
+
+      recognition.onresult = function(event) {
+        const result = event.results[0][0].transcript;
+        messageInput.value = result;
+        sendMessage();
+      };
+
+      recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+      };
+    }
+
+
+
+    function addMessage(message, isUserMessage) {
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("mt-3", "p-3", "rounded");
+
+      if (isUserMessage) {
+        messageDiv.classList.add("user-message");
+      } else {
+        messageDiv.classList.add("bot-message");
+        // Speak the bot's response
+        speak(message);
+      }
+
+      messageDiv.innerHTML = `
+        <img src="{{ url_for('static', filename='images/user.png') }}" class="user-icon"><p>${message}</p>
+        `;
+
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+      const message = messageInput.value.trim();
+
+      if (message !== "") {
+        addMessage(message, true);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/api", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            const response = xhr.responseText;
+            messageInput.value = "";
+            const messageDiv = document.createElement("div");
+            messageDiv.classList.add("mt-3", "p-3", "rounded");
+            messageDiv.classList.add("bot-message");
+
+            const content = response;
+
+
+            // Check if the content has code block
+            const hasCodeBlock = content.includes("```");
+
+            if (hasCodeBlock) {
+              // If the content has code block, wrap it in a <pre><code> element
+              const codeContent = content.replace(/```([\s\S]+?)```/g, '</p><pre><code>$1</code></pre><p>');
+              const speakcont = content.replace(/```([\s\S]+?)```/g,"");
+
+
+              messageDiv.innerHTML = `<img src="{{ url_for('static', filename='images/gpt.png') }}" class="bot-icon"><p>${codeContent}</p>`
+              speak(speakcont.replace(/`/g,""))
+
+            }
+            else{
+              let speakcontent = content.replace(/\*/g,"");
+
+              // Speak the bot's response
+              speak(speakcontent);
+
+              messageDiv.innerHTML = `<img src="{{ url_for('static', filename='images/gpt.png') }}" class="bot-icon"><p>${speakcontent}</p>`
+
+
+
+            }
+
+
+            chatBox.appendChild(messageDiv);
+            chatBox.scrollTop = chatBox.scrollHeight;
+          }
+        };
+        xhr.send("message=" + encodeURIComponent(message));
+      }
+    }
+
+    function enableVoiceInput() {
+      voiceInputBtn.addEventListener("click", listen);
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keydown", event => {
+      if (event.keyCode === 13 && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    enableVoiceInput();
+  </script>
+</body>
+
+</html>
+
